@@ -3,6 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Shader.hpp"
 #include "Texture.hpp"
 
@@ -110,6 +114,7 @@ int main()
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
+
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);
@@ -117,13 +122,18 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //auto time = (float)glfwGetTime();
+        auto time = (float)glfwGetTime();
         //auto greenValue = (std::sin(time) / 2.0f) + 0.5f;
         //auto vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
 
+        auto transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, glm::radians(time * 10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+
         shader.Use();
+        shader.SetMat4("transform", transform);
         texture.Use();
-        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

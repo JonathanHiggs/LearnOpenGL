@@ -7,6 +7,8 @@
 
 #include <Glad/glad.h>
 
+#include <glm/glm.hpp>
+
 
 class Shader
 {
@@ -85,6 +87,12 @@ public:
     void SetFloat(std::string const& name, float value) const
     {
         glUniform1f(glGetUniformLocation(Id, name.c_str()), value);
+    }
+
+    void SetMat4(std::string const& name, glm::mat4 value) const
+    {
+        auto location = glGetUniformLocation(Id, name.c_str());
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
     }
 
 private:
