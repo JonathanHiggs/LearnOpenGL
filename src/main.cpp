@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Shader.hpp"
+#include "Texture.hpp"
 
 
 void OnFramebufferSizeChanged(GLFWwindow* window, int width, int height)
@@ -19,19 +20,19 @@ void ProcessInput(GLFWwindow* window)
 }
 
 
-#include <direct.h>
-
-std::string GetCurrentDir() {
-    char buff[FILENAME_MAX];
-    _getcwd(buff, FILENAME_MAX);
-    auto current_woring_dir = std::string(buff);
-    return current_woring_dir;
-}
+//#include <direct.h>
+//
+//std::string GetCurrentDir() {
+//    char buff[FILENAME_MAX];
+//    _getcwd(buff, FILENAME_MAX);
+//    auto current_woring_dir = std::string(buff);
+//    return current_woring_dir;
+//}
 
 
 int main()
 {
-    std::cout << GetCurrentDir() << std::endl;
+    //std::cout << GetCurrentDir() << std::endl;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -59,14 +60,15 @@ int main()
     glViewport(0, 0, 800, 600);
 
     auto shader = Shader("../../../../src/assets/shader.vert", "../../../../src/assets/shader.frag");
+    auto texture = Texture("D:\\dev\\graphics\\LearnOpenGL\\src\\assets\\wall.jpg");
 
 
     float vertices[] = {
-        // positions        // colours
-         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,    // top right
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,    // bottom right
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,    // bottom left
-        -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f     // top left
+        // positions            // colours          // texture coord
+         0.5f,  0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f,    // top right
+         0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f,    // bottom right
+        -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   0.0f, 0.0f,    // bottom left
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 1.0f     // top left
     };
 
     unsigned int indices[] = {
@@ -89,12 +91,16 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // colour attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // texture coordinates
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -116,6 +122,7 @@ int main()
         //auto vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
 
         shader.Use();
+        texture.Use();
         //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         glBindVertexArray(vao);

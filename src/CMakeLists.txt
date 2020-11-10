@@ -17,4 +17,5 @@ target_link_libraries(LearnOpenGL
     glfw
     Glad
     glm
+    stb
 )

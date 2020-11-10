@@ -31,10 +31,11 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 include_directories(
-    Glad/include
+    Vendor/Glad/include
+    Vendor/stb/include
 )
 
-add_subdirectory(Glad)
+add_subdirectory(Vendor)
 add_subdirectory(src)
 
 
