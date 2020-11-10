@@ -17,7 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(CMAKE_CXX_FLAGS "/EHsc /WX /W4 /wd4100")
+set(CMAKE_CXX_FLAGS "/EHsc /WX /W4 /wd4100 /wd4189")
 set(CMAKE_CXX_FLAGS_DEBUG "/Od /Oi /Zi /JMC")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -36,3 +36,6 @@ include_directories(
 
 add_subdirectory(Glad)
 add_subdirectory(src)
+
+
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT LearnOpenGL)
