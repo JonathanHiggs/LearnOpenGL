@@ -98,19 +98,19 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
 }
 
 
-//#include <direct.h>
-//
-//std::string GetCurrentDir() {
-//    char buff[FILENAME_MAX];
-//    _getcwd(buff, FILENAME_MAX);
-//    auto current_woring_dir = std::string(buff);
-//    return current_woring_dir;
-//}
+#include <direct.h>
+
+std::string GetCurrentDir() {
+    char buff[FILENAME_MAX];
+    _getcwd(buff, FILENAME_MAX);
+    auto current_woring_dir = std::string(buff);
+    return current_woring_dir;
+}
 
 
 int main()
 {
-    //std::cout << GetCurrentDir() << std::endl;
+    std::cout << GetCurrentDir() << std::endl;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -142,8 +142,8 @@ int main()
     glViewport(0, 0, ScreenWidth, ScreenHeight);
     glEnable(GL_DEPTH_TEST);
 
-    auto shader = Shader("../../../../src/assets/shader.vert", "../../../../src/assets/shader.frag");
-    auto texture = Texture("D:\\dev\\graphics\\LearnOpenGL\\src\\assets\\wall.jpg");
+    auto shader = Shader("assets/shader.vert", "assets/shader.frag");
+    auto texture = Texture("assets/wall.jpg");
 
 
     float vertices[] = {

@@ -1,0 +1,13 @@
+{
+    "version": "0.2.1",
+    "defaults": {},
+    "configurations": [
+        {
+            "type": "default",
+            "project": "CMakeLists.txt",
+            "projectTarget": "LearnOpenGL.exe (bin\\Debug\\LearnOpenGL.exe)",
+            "name": "LearnOpenGL.exe (bin\\Debug\\LearnOpenGL.exe)",
+            "currentDir": "${workspaceRoot}/src"
+        }
+    ]
+}
