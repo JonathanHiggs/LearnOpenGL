@@ -7,6 +7,7 @@ SET(HEADER_FILES
     Camera.hpp
     Shader.hpp
     Texture.hpp
+    Window.hpp
 )
 
 

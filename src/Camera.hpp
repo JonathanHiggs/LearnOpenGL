@@ -11,14 +11,13 @@ class Camera
 {
 public:
     Camera(
-        GLFWwindow* window,
         glm::vec3 position,
         glm::vec3 front,
         glm::vec3 up,
         unsigned int screenHeight,
         unsigned int screenWidth
     )
-        : window(window)
+        : window(nullptr)
         , position(position)
         , front(front)
         , up(up)
@@ -96,6 +95,11 @@ public:
     {
         screenWidth = width;
         screenHeight = height;
+    }
+
+    void SetWindow(GLFWwindow* glfwWindow)
+    {
+        window = glfwWindow;
     }
 
 private:

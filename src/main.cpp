@@ -10,45 +10,10 @@
 #include "Camera.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
-
-
-struct WindowData
-{
-    Camera* camera;
-};
-
-
-void OnFramebufferSizeChanged(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-
-    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
-    data->camera->OnFrameBufferSizeChanged(width, height);
-}
-
-void OnCursorPosChanged(GLFWwindow* window, double x, double y)
-{
-    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
-    data->camera->OnCursorPosChanged(x, y);
-}
-
-void OnMouseScrolled(GLFWwindow* window, double xOffset, double yOffset)
-{
-    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
-    data->camera->OnMouseScrolled(xOffset, yOffset);
-}
-
-
-void ProcessInput(GLFWwindow* window, Camera & camera, float deltaTime)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    camera.Update(deltaTime);
-}
-
+#include "Window.hpp"
 
 #include <direct.h>
+
 
 std::string GetCurrentDir() {
     char buff[FILENAME_MAX];
@@ -62,45 +27,15 @@ int main()
 {
     std::cout << GetCurrentDir() << std::endl;
 
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    auto* window = glfwCreateWindow(1600, 1200, "LearnOpenGL", NULL, NULL);
-
-    if (window == nullptr)
-    {
-        std::cout << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
+    auto props = WindowProps{ "LearnOpenGL" , 1600, 1200 };
 
     auto camera = Camera(
-        window,
         glm::vec3(0.0f, 0.0f, 3.0f),
         glm::vec3(0.0f, 0.0f, -1.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
         1600, 1200);
 
-    auto windowData = WindowData{ &camera };
-    glfwSetWindowUserPointer(window, &windowData);
-
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChanged);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, OnCursorPosChanged);
-    glfwSetScrollCallback(window, OnMouseScrolled);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD\n";
-        return -1;
-    }
-
-    glViewport(0, 0, 1600, 1200);
-    glEnable(GL_DEPTH_TEST);
+    auto window = Window(props, &camera);
 
     auto shader = Shader("assets/shader.vert", "assets/shader.frag");
     auto texture = Texture("assets/wall.jpg");
@@ -178,13 +113,15 @@ int main()
     float lastFrame = 0.0f;
     auto time = (float)glfwGetTime();
 
-    while (!glfwWindowShouldClose(window))
+    while (!window.ShouldClose())
     {
         lastFrame = time;
         time = (float)glfwGetTime();
         deltaTime = time - lastFrame;
 
-        ProcessInput(window, camera, deltaTime);
+        window.Poll();
+        window.Update(deltaTime);
+        camera.Update(deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -207,8 +144,7 @@ int main()
 
         glBindVertexArray(0);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.SwapBuffers();
     }
 
     glDeleteVertexArrays(1, &vao);
