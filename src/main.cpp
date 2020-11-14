@@ -107,7 +107,7 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
 
@@ -120,6 +120,20 @@ int main()
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
 
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -147,11 +161,8 @@ int main()
             sin(time * 0.7f),
             sin(time * 1.3f));*/
 
-        glClearColor(0.1f, 0.15f, 0.15f, 1.0f);
+        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        auto model = glm::mat4(1.0f);
-        auto normal = glm::mat3(glm::transpose(glm::inverse(model)));
 
 
         materialShader.Use();
@@ -161,27 +172,44 @@ int main()
         materialShader.SetInt("uMaterial.diffuse", 0);
         materialShader.SetInt("uMaterial.specular", 1);
         materialShader.SetFloat("uMaterial.shininess", 32.0f);
-        materialShader.SetVec3("uLight.position", lightPosition);
+        //materialShader.SetVec3("uLight.position", lightPosition);
+        //materialShader.SetVec3("uLight.direction", -0.2f, -1.0f, -0.3f);
+        materialShader.SetVec3("uLight.position", camera.Position());
+        materialShader.SetVec3("uLight.direction", camera.Front());
+        materialShader.SetFloat("uLight.cutOff", glm::cos(glm::radians(12.5f)));
+        materialShader.SetFloat("uLight.outerCutOff", glm::cos(glm::radians(17.5f)));
         materialShader.SetVec3("uLight.ambient", lightColor * 0.25f);
         materialShader.SetVec3("uLight.diffuse", lightColor);
         materialShader.SetVec3("uLight.specular", glm::vec3(1.0f) * glm::length2(lightColor));
+        materialShader.SetFloat("uLight.constant", 1.0f);
+        materialShader.SetFloat("uLight.linear", 0.09f);
+        materialShader.SetFloat("uLight.quadratic", 0.032f);
 
         materialShader.SetVec3("uViewPosition", camera.Position());
 
-        materialShader.SetMat4("uModel", model);
-        materialShader.SetMat3("uNormal", normal);
         materialShader.SetMat4("uView", camera.View());
         materialShader.SetMat4("uProjection", window.Projection());
 
-        glBindVertexArray(cubeVao);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (auto i = 0; i < 10; i++)
+        {
+            auto model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+            auto normal = glm::mat3(glm::transpose(glm::inverse(model)));
+
+            materialShader.SetMat4("uModel", model);
+            materialShader.SetMat3("uNormal", normal);
+
+            glBindVertexArray(cubeVao);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
 
         lightShader.Use();
         lightShader.SetVec3("uLightColor", lightColor);
         lightShader.SetMat4("uView", camera.View());
         lightShader.SetMat4("uProjection", window.Projection());
-        model = glm::mat4(1.0f);
+        auto model = glm::mat4(1.0f);
         model = glm::translate(model, lightPosition);
         model = glm::scale(model, glm::vec3(0.2f));
         lightShader.SetMat4("uModel", model);

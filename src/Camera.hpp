@@ -43,6 +43,7 @@ public:
     }
 
     inline glm::vec3 const & Position() const noexcept { return position; }
+    inline glm::vec3 const & Front() const noexcept { return front;}
 
     inline glm::mat4 View() const noexcept
     {
