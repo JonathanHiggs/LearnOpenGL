@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include "Camera.hpp"
 #include "Shader.hpp"
@@ -36,7 +37,8 @@ int main()
 
     auto window = Window(props, &camera);
 
-    auto shader = Shader("assets/shader.vert", "assets/shader.frag");
+    //auto phongShader = Shader("assets/phong-shader.vert", "assets/phong-shader.frag");
+    auto materialShader = Shader("assets/material-shader.vert", "assets/material-shader.frag");
     auto lightShader = Shader("assets/light-shader.vert", "assets/light-shader.frag");
 
     //auto texture = Texture("assets/wall.jpg");
@@ -123,7 +125,7 @@ int main()
     auto time = (float)glfwGetTime();
 
     auto lightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
-    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    //auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
     while (!window.ShouldClose())
     {
@@ -135,21 +137,33 @@ int main()
         window.Update(deltaTime);
         camera.Update(deltaTime);
 
+        auto lightColor = glm::vec3(
+            sin(time * 2.0f),
+            sin(time * 0.7f),
+            sin(time * 1.3f));
+
         glClearColor(0.1f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         auto model = glm::mat4(1.0f);
         auto normal = glm::mat3(glm::transpose(glm::inverse(model)));
 
-        shader.Use();
-        shader.SetVec3("uObjectColor", 1.0f, 0.5f, 0.31f);
-        shader.SetVec3("uLightColor", lightColor);
-        shader.SetVec3("uLightPosition", lightPosition);
-        shader.SetMat4("uModel", model);
-        shader.SetMat3("uNormal", normal);
-        shader.SetVec3("uViewPosition", camera.Position());
-        shader.SetMat4("uView", camera.View());
-        shader.SetMat4("uProjection", window.Projection());
+        materialShader.Use();
+        materialShader.SetVec3("uMaterial.ambient", 1.0f, 0.5f, 0.31f);
+        materialShader.SetVec3("uMaterial.diffuse", 1.0f, 0.5f, 0.31f);
+        materialShader.SetVec3("uMaterial.specular", 0.5f, 0.5f, 0.5f);
+        materialShader.SetFloat("uMaterial.shininess", 32.0f);
+        materialShader.SetVec3("uLight.position", lightPosition);
+        materialShader.SetVec3("uLight.ambient", lightColor * 0.25f);
+        materialShader.SetVec3("uLight.diffuse", lightColor);
+        materialShader.SetVec3("uLight.specular", glm::vec3(1.0f) * glm::length2(lightColor));
+
+        materialShader.SetVec3("uViewPosition", camera.Position());
+
+        materialShader.SetMat4("uModel", model);
+        materialShader.SetMat3("uNormal", normal);
+        materialShader.SetMat4("uView", camera.View());
+        materialShader.SetMat4("uProjection", window.Projection());
 
         glBindVertexArray(cubeVao);
         glDrawArrays(GL_TRIANGLES, 0, 36);

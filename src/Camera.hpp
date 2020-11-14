@@ -64,6 +64,8 @@ public:
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             position += cameraSpeed * up;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+            position -= cameraSpeed * up;
 
         if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
         {
