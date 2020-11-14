@@ -7,6 +7,9 @@
 
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 struct WindowProps
 {
@@ -58,11 +61,11 @@ public:
         glEnable(GL_DEPTH_TEST);
 
         glfwSetWindowUserPointer(window, &windowData);
+        glfwSwapInterval(1);
 
         glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
             auto* data = (WindowData*)glfwGetWindowUserPointer(window);
             glViewport(0, 0, width, height);
-            data->camera->OnFrameBufferSizeChanged(width, height);
         });
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -81,6 +84,13 @@ public:
     inline GLFWwindow* GlfwWindow() const noexcept { return window; }
 
     inline bool ShouldClose() const noexcept { return glfwWindowShouldClose(window); }
+
+    inline glm::mat4 Projection() const noexcept
+    {
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        return glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.0f);
+    }
 
     void Poll() const
     {
@@ -101,4 +111,6 @@ public:
 private:
     GLFWwindow * window;
     WindowData windowData;
+
+    float fov = 45.0f;
 };

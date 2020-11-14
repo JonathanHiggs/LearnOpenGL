@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -13,27 +15,37 @@ public:
     Camera(
         glm::vec3 position,
         glm::vec3 front,
-        glm::vec3 up,
-        unsigned int screenHeight,
-        unsigned int screenWidth
+        glm::vec3 up
     )
         : window(nullptr)
         , position(position)
         , front(front)
         , up(up)
-        , screenHeight(screenHeight)
-        , screenWidth(screenWidth)
-    { }
+    {
+        UpdateVectors();
+    }
+
+
+    Camera(
+        glm::vec3 position,
+        glm::vec3 up,
+        float yaw,
+        float pitch
+    )
+        : window(nullptr)
+        , position(position)
+        , front(glm::vec3(0.0f, 0.0f, -1.0f))
+        , up(up)
+        , yaw(yaw)
+        , pitch(pitch)
+    {
+        UpdateVectors();
+    }
 
 
     inline glm::mat4 View() const noexcept
     {
         return glm::lookAt(position, position + front, up);
-    }
-
-    inline glm::mat4 Projection() const noexcept
-    {
-        return glm::perspective(glm::radians(fov), (float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
     }
 
     void Update(float deltaTime)
@@ -48,6 +60,14 @@ public:
             position -= glm::normalize(glm::cross(front, up)) * cameraSpeed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             position += glm::normalize(glm::cross(front, up)) * cameraSpeed;
+
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            position += cameraSpeed * up;
+
+        if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
+        {
+            std::cout << "position x: " << position.x << " y: " << position.y << " z: " << position.z << "\tpitch: " << pitch << "\tyaw: " << yaw << std::endl;
+        }
     }
 
     void OnCursorPosChanged(double x, double y)
@@ -73,12 +93,7 @@ public:
         if (pitch < -89.0f)
             pitch = -89.0f;
 
-        auto direction = glm::vec3(
-            cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
-            sin(glm::radians(pitch)),
-            sin(glm::radians(yaw)) * cos(glm::radians(pitch)));
-
-        front = glm::normalize(direction);
+        UpdateVectors();
     }
 
     void OnMouseScrolled(double xOffset, double yOffset)
@@ -91,15 +106,22 @@ public:
             fov = 60.0f;
     }
 
-    void OnFrameBufferSizeChanged(int width, int height)
-    {
-        screenWidth = width;
-        screenHeight = height;
-    }
-
     void SetWindow(GLFWwindow* glfwWindow)
     {
         window = glfwWindow;
+    }
+
+private:
+    void UpdateVectors()
+    {
+        auto direction = glm::vec3(
+            cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
+            sin(glm::radians(pitch)),
+            sin(glm::radians(yaw)) * cos(glm::radians(pitch)));
+
+        front = glm::normalize(direction);
+        right = glm::normalize(glm::cross(front, worldUp));
+        up = glm::normalize(glm::cross(right, front));
     }
 
 private:
@@ -107,18 +129,17 @@ private:
 
     glm::vec3 position;
     glm::vec3 front;
+    glm::vec3 right;
     glm::vec3 up;
+    glm::vec3 const worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    const float sensitivity = 0.1f;
+    const float sensitivity = 0.08f;
     bool firstMouse = true;
 
     float lastX = 0;
     float lastY = 0;
 
     float pitch = 0;
-    float yaw = 0;
+    float yaw = -90.0f;
     float fov = 45.0f;
-
-    unsigned int screenHeight;
-    unsigned int screenWidth;
 };

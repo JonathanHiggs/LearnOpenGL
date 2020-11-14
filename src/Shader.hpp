@@ -89,6 +89,18 @@ public:
         glUniform1f(glGetUniformLocation(Id, name.c_str()), value);
     }
 
+    void SetVec3(std::string const& name, float a, float b, float c)
+    {
+        auto location = glGetUniformLocation(Id, name.c_str());
+        glUniform3f(location, a, b, c);
+    }
+
+    void SetVec3(std::string const& name, glm::vec3 vec)
+    {
+        auto location = glGetUniformLocation(Id, name.c_str());
+        glUniform3f(location, vec.x, vec.y, vec.z);
+    }
+
     void SetMat4(std::string const& name, glm::mat4 value) const
     {
         auto location = glGetUniformLocation(Id, name.c_str());
