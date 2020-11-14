@@ -7,94 +7,44 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Camera.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 
 
-unsigned int ScreenWidth = 1600;
-unsigned int ScreenHeight = 1200;
-
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-bool firstMouse = true;
-const float sensitivity = 0.1f;
-
-float lastX = 400;
-float lastY = 300;
-
-float yaw = 0;
-float pitch = 0;
-float fov = 45.0f;
+struct WindowData
+{
+    Camera* camera;
+};
 
 
 void OnFramebufferSizeChanged(GLFWwindow* window, int width, int height)
 {
-    ScreenWidth = width;
-    ScreenHeight = height;
-
     glViewport(0, 0, width, height);
+
+    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
+    data->camera->OnFrameBufferSizeChanged(width, height);
 }
 
 void OnCursorPosChanged(GLFWwindow* window, double x, double y)
 {
-    if (firstMouse)
-    {
-        lastX = (float)x;
-        lastY = (float)y;
-        firstMouse = false;
-    }
-
-    float xOffset = ((float)x - lastX) * sensitivity;
-    float yOffset = (lastY - (float)y) * sensitivity;
-
-    lastX = (float)x;
-    lastY = (float)y;
-
-    yaw += xOffset;
-    pitch += yOffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    auto direction = glm::vec3(
-        cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
-        sin(glm::radians(pitch)),
-        sin(glm::radians(yaw)) * cos(glm::radians(pitch)));
-
-    cameraFront = glm::normalize(direction);
+    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
+    data->camera->OnCursorPosChanged(x, y);
 }
 
 void OnMouseScrolled(GLFWwindow* window, double xOffset, double yOffset)
 {
-    fov -= (float)yOffset;
-
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 60.0f)
-        fov = 60.0f;
+    auto* data = (WindowData*)glfwGetWindowUserPointer(window);
+    data->camera->OnMouseScrolled(xOffset, yOffset);
 }
 
 
-void ProcessInput(GLFWwindow* window, float deltaTime)
+void ProcessInput(GLFWwindow* window, Camera & camera, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    const float cameraSpeed = 2.5f * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    camera.Update(deltaTime);
 }
 
 
@@ -117,7 +67,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    auto* window = glfwCreateWindow(ScreenWidth, ScreenHeight, "LearnOpenGL", NULL, NULL);
+    auto* window = glfwCreateWindow(1600, 1200, "LearnOpenGL", NULL, NULL);
 
     if (window == nullptr)
     {
@@ -125,6 +75,16 @@ int main()
         glfwTerminate();
         return -1;
     }
+
+    auto camera = Camera(
+        window,
+        glm::vec3(0.0f, 0.0f, 3.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        1600, 1200);
+
+    auto windowData = WindowData{ &camera };
+    glfwSetWindowUserPointer(window, &windowData);
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChanged);
@@ -139,7 +99,7 @@ int main()
         return -1;
     }
 
-    glViewport(0, 0, ScreenWidth, ScreenHeight);
+    glViewport(0, 0, 1600, 1200);
     glEnable(GL_DEPTH_TEST);
 
     auto shader = Shader("assets/shader.vert", "assets/shader.frag");
@@ -224,18 +184,14 @@ int main()
         time = (float)glfwGetTime();
         deltaTime = time - lastFrame;
 
-        ProcessInput(window, deltaTime);
+        ProcessInput(window, camera, deltaTime);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        auto view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        auto projection = glm::perspective(glm::radians(fov), (float)ScreenWidth / (float)ScreenHeight, 0.1f, 100.0f);
-
         shader.Use();
-        shader.SetMat4("view", view);
-        shader.SetMat4("projection", projection);
+        shader.SetMat4("view", camera.View());
+        shader.SetMat4("projection", camera.Projection());
 
         texture.Use();
 
