@@ -101,6 +101,12 @@ public:
         glUniform3f(location, vec.x, vec.y, vec.z);
     }
 
+    void SetMat3(std::string const& name, glm::mat3 value) const
+    {
+        auto location = glGetUniformLocation(Id, name.c_str());
+        glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
+    }
+
     void SetMat4(std::string const& name, glm::mat4 value) const
     {
         auto location = glGetUniformLocation(Id, name.c_str());

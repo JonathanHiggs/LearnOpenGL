@@ -42,6 +42,7 @@ public:
         UpdateVectors();
     }
 
+    inline glm::vec3 const & Position() const noexcept { return position; }
 
     inline glm::mat4 View() const noexcept
     {
