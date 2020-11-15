@@ -8,6 +8,13 @@
             "projectTarget": "LearnOpenGL.exe (bin\\Debug\\LearnOpenGL.exe)",
             "name": "LearnOpenGL.exe (bin\\Debug\\LearnOpenGL.exe)",
             "currentDir": "${workspaceRoot}/src"
+        },
+        {
+            "type": "default",
+            "project": "CMakeLists.txt",
+            "projectTarget": "Breakout.exe (bin\\Debug\\Breakout.exe)",
+            "name": "Breakout.exe (bin\\Debug\\Breakout.exe)",
+            "currentDir": "${workspaceRoot}/Breakout"
         }
     ]
 }

@@ -36,8 +36,9 @@ include_directories(
     Vendor/stb/include
 )
 
-add_subdirectory(Vendor)
+add_subdirectory(Breakout)
 add_subdirectory(src)
+add_subdirectory(Vendor)
 
 
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT LearnOpenGL)
