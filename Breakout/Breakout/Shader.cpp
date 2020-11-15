@@ -5,6 +5,10 @@
 namespace Breakout
 {
 
+    Shader::Shader()
+        : ID(0u)
+    { }
+
     Shader& Shader::Use()
     {
         glUseProgram(this->ID);

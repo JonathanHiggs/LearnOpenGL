@@ -16,8 +16,6 @@ namespace Breakout
     const unsigned int SCREEN_WIDTH = 1200;
     const unsigned int SCREEN_HEIGHT = 900;
 
-    Game Breakout(SCREEN_WIDTH, SCREEN_HEIGHT);
-
     int Run(int argc, char* argv[])
     {
         glfwInit();
@@ -43,7 +41,8 @@ namespace Breakout
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        Breakout.Init();
+        auto breakout = Game::Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+        glfwSetWindowUserPointer(window, &breakout);
 
         float deltaTime = 0.0f;
         float lastFrame = 0.0f;
@@ -56,12 +55,12 @@ namespace Breakout
 
             glfwPollEvents();
 
-            Breakout.ProcessInput(deltaTime);
-            Breakout.Update(deltaTime);
+            breakout.ProcessInput(deltaTime);
+            breakout.Update(deltaTime);
 
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
-            Breakout.Render();
+            breakout.Render();
 
             glfwSwapBuffers(window);
         }
@@ -74,15 +73,17 @@ namespace Breakout
 
     void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
     {
+        auto* breakout = (Game*)glfwGetWindowUserPointer(window);
+
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
         if (key >= 0 && key < 1024)
         {
             if (action == GLFW_PRESS)
-                Breakout.Keys[key] = true;
+                breakout->Keys[key] = true;
             else if (action == GLFW_RELEASE)
-                Breakout.Keys[key] = false;
+                breakout->Keys[key] = false;
         }
     }
 

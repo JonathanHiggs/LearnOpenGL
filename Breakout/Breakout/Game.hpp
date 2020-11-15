@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <Breakout/BallObject.hpp>
 #include <Breakout/GameLevel.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
@@ -26,13 +27,23 @@ namespace Breakout
         bool Keys[2014];
         unsigned int Width, Height, Level;
         std::vector<GameLevel> Levels;
-        GameObject* Player;
-        SpriteRenderer * Renderer;
+        GameObject Player;
+        BallObject Ball;
+        SpriteRenderer Renderer;
 
-        Game(unsigned int width, unsigned int height);
+    protected:
+        Game(
+            unsigned int width,
+            unsigned int height,
+            std::vector<GameLevel> levels,
+            GameObject player,
+            BallObject ball,
+            SpriteRenderer renderer);
+
+    public:
+        static Game Init(unsigned int width, unsigned int height);
         ~Game();
 
-        void Init();
         void ProcessInput(float deltaTime);
         void Update(float deltaTime);
         void Render();

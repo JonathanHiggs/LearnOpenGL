@@ -16,7 +16,7 @@ namespace Breakout
     public:
         unsigned int ID;
 
-        Shader() { }
+        Shader();
 
         Shader& Use();
 

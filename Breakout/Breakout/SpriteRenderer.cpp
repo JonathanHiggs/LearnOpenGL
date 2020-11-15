@@ -14,9 +14,17 @@ namespace Breakout
         InitRenderData();
     }
 
+    SpriteRenderer::SpriteRenderer(SpriteRenderer&& other) noexcept
+        : shader(other.shader)
+        , quadVao(other.quadVao)
+    {
+        other.quadVao = 0u;
+    }
+
     SpriteRenderer::~SpriteRenderer()
     {
-        glDeleteVertexArrays(1, &this->quadVao);
+        if (quadVao != 0u)
+            glDeleteVertexArrays(1, &this->quadVao);
     }
 
     void SpriteRenderer::DrawSprite(

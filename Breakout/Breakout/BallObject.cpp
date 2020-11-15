@@ -1,0 +1,55 @@
+#include <Breakout/BallObject.hpp>
+
+
+namespace Breakout
+{
+
+    glm::vec2 const BallObject::InitialVelocity = glm::vec2(100.0f, -350.0f);
+    float const BallObject::InitialRadius = 12.5f;
+
+    BallObject::BallObject(glm::vec2 pos, float radius, glm::vec2 velocity, Texture2D sprite)
+        : GameObject(
+            pos,
+            glm::vec2(radius * 2.0f, radius * 2.0f),
+            sprite,
+            glm::vec3(1.0f))
+        , Velocity(velocity)
+        , Radius(radius)
+        , Stuck(true)
+    { }
+
+
+    glm::vec2 BallObject::Move(float deltaTime, unsigned int windowWidth)
+    {
+        auto width = (float)windowWidth - Size.x;
+
+        if (!Stuck)
+        {
+            Position += Velocity * deltaTime;
+
+            if (Position.x <= 0.0f)
+            {
+                Velocity.x = -Velocity.x;
+                Position.x = -Position.x;
+            }
+            else if (Position.x >= width)
+            {
+                Velocity.x = -Velocity.x;
+                Position.x = 2.0f * width - Position.x;
+            }
+
+            if (Position.y <= 0.0f)
+            {
+                Velocity.y = -Velocity.y;
+                Position.y = -Position.y;
+            }
+        }
+
+        return Position;
+    }
+
+    void BallObject::Reset(glm::vec2 position, glm::vec2 velocity)
+    {
+    }
+
+}

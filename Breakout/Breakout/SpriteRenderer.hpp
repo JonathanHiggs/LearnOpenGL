@@ -13,6 +13,8 @@ namespace Breakout
     {
     public:
         SpriteRenderer(Shader& shader);
+        SpriteRenderer(SpriteRenderer&& other) noexcept;
+
         ~SpriteRenderer();
 
         void DrawSprite(
