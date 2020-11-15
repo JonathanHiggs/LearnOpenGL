@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <map>
+#include <memory>
 #include <string>
 
 #include <Glad/glad.h>
@@ -8,12 +10,62 @@
 #include <stb/stb_image.h>
 
 
+enum class TextureType
+{
+    Diffuse,
+    Specular,
+    Normal,
+    Height,
+    Unknown
+};
+
+
+std::string const & ToString(TextureType type)
+{
+    switch (type)
+    {
+    case TextureType::Diffuse:
+    {
+        static std::string name = "texture_diffuse";
+        return name;
+    } break;
+
+    case TextureType::Specular:
+    {
+        static std::string name = "texture_specular";
+        return name;
+    } break;
+
+    case TextureType::Normal:
+    {
+        static std::string name = "texture_normal";
+        return name;
+    } break;
+
+    case TextureType::Height:
+    {
+        static std::string name = "texture_height";
+        return name;
+    } break;
+
+    default:
+    {
+        std::cout << "ERROR::TEXTURE_TYPE Unknown texture type";
+        static std::string name = "unknown";
+        return name;
+    } break;
+    }
+}
+
+
 class Texture
 {
 public:
     unsigned int Id;
+    TextureType const Type;
 
-    Texture(std::string const& path)
+    Texture(std::string const& path, TextureType type)
+        : Type(type)
     {
         stbi_set_flip_vertically_on_load(1);
 
@@ -60,13 +112,54 @@ public:
         stbi_image_free(data);
     }
 
-    ~Texture()
+    Texture(Texture const& other) = delete;
+
+    Texture(Texture&& other)
+        : Id(other.Id)
+        , Type(other.Type)
     {
-        glDeleteTextures(1, &Id);
+        other.Id = 0u;
     }
 
-    void Use(unsigned int slot = 0) const
+    ~Texture()
+    {
+        if (Id != 0u)
+            glDeleteTextures(1, &Id);
+    }
+
+    Texture operator = (Texture const& other) = delete;
+
+    void Use(unsigned int slot = 0u) const
     {
         glBindTextureUnit(slot, Id);
     }
+};
+
+
+using TexturePtr = std::shared_ptr<Texture>;
+
+
+class TextureManager
+{
+public:
+    TextureManager()
+        : cache()
+    { }
+
+
+    TexturePtr LoadTexture(std::string const& path, TextureType type)
+    {
+        auto it = cache.find(path);
+        if (it != cache.end())
+            return it->second;
+
+        auto texture = std::make_shared<Texture>(path, type);
+        cache[path] = texture;
+
+        return texture;
+    }
+
+
+private:
+    std::map<std::string, TexturePtr> cache;
 };

@@ -5,6 +5,8 @@ SET(SOURCE_FILES
 
 SET(HEADER_FILES
     Camera.hpp
+    Mesh.hpp
+    Model.hpp
     Shader.hpp
     Texture.hpp
     Window.hpp
@@ -21,4 +23,5 @@ target_link_libraries(LearnOpenGL
     Glad
     glm
     stb
+    assimp::assimp
 )

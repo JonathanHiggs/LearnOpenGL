@@ -29,6 +29,7 @@ add_definitions(-DGLFW_INCLUDE_NONE)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 include_directories(
     Vendor/Glad/include
