@@ -1,6 +1,8 @@
 set(SOURCE_FILES
     main.cpp
     Game.cpp
+    GameLevel.cpp
+    GameObject.cpp
     ResourceManager.cpp
     Shader.cpp
     SpriteRenderer.cpp
@@ -9,6 +11,8 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     Game.hpp
+    GameLevel.hpp
+    GameObject.hpp
     ResourceManager.hpp
     Shader.hpp
     SpriteRenderer.hpp

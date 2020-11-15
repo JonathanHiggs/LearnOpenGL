@@ -20,7 +20,7 @@ namespace Breakout
     }
 
     void SpriteRenderer::DrawSprite(
-        Texture2D& texture,
+        Texture2D & texture,
         glm::vec2 position,
         glm::vec2 size,
         float rotate,

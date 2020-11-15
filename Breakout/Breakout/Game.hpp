@@ -1,6 +1,8 @@
 #pragma once
 
+#include <vector>
 
+#include <Breakout/GameLevel.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
 
@@ -14,12 +16,18 @@ namespace Breakout
         Win
     };
 
+    const glm::vec2 PLAYER_SIZE(100.0f, 20.0f);
+    const float PLAYER_VELOCITY(500.0f);
+
     class Game
     {
     public:
         GameState State;
         bool Keys[2014];
-        unsigned int Width, Height;
+        unsigned int Width, Height, Level;
+        std::vector<GameLevel> Levels;
+        GameObject* Player;
+        SpriteRenderer * Renderer;
 
         Game(unsigned int width, unsigned int height);
         ~Game();
@@ -28,9 +36,6 @@ namespace Breakout
         void ProcessInput(float deltaTime);
         void Update(float deltaTime);
         void Render();
-
-    private:
-        SpriteRenderer * renderer;
     };
 
 }
