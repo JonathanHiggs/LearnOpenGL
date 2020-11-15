@@ -4,8 +4,8 @@
 namespace Breakout
 {
 
-    glm::vec2 const BallObject::InitialVelocity = glm::vec2(100.0f, -350.0f);
-    float const BallObject::InitialRadius = 12.5f;
+    glm::vec2 const BallObject::InitialVelocity = glm::vec2(150.0f, -500.0f);
+    float const BallObject::InitialRadius = 17.5f;
 
     BallObject::BallObject(glm::vec2 pos, float radius, glm::vec2 velocity, Texture2D sprite)
         : GameObject(
@@ -50,6 +50,9 @@ namespace Breakout
 
     void BallObject::Reset(glm::vec2 position, glm::vec2 velocity)
     {
+        Position = position;
+        Velocity = velocity;
+        Stuck = true;
     }
 
 }

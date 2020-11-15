@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <Breakout/BallObject.hpp>
+#include <Breakout/Collisions.hpp>
 #include <Breakout/GameLevel.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
@@ -13,12 +14,13 @@ namespace Breakout
     enum class GameState
     {
         Active,
+        Pause,
         Menu,
         Win
     };
 
-    const glm::vec2 PLAYER_SIZE(100.0f, 20.0f);
-    const float PLAYER_VELOCITY(500.0f);
+    const glm::vec2 PLAYER_SIZE(150.0f, 20.0f);
+    const float PLAYER_VELOCITY(900.0f);
 
     class Game
     {
@@ -46,7 +48,11 @@ namespace Breakout
 
         void ProcessInput(float deltaTime);
         void Update(float deltaTime);
+        void CheckCollisions();
         void Render();
+
+        void ResetLevel();
+        void ResetPlayer();
     };
 
 }

@@ -27,6 +27,7 @@ namespace Breakout
 
         auto* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout", nullptr, nullptr);
         glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {

@@ -1,6 +1,7 @@
 set(SOURCE_FILES
     main.cpp
     BallObject.cpp
+    Collisions.cpp
     Game.cpp
     GameLevel.cpp
     GameObject.cpp
@@ -12,6 +13,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     BallObject.hpp
+    Collisions.hpp
     Game.hpp
     GameLevel.hpp
     GameObject.hpp
