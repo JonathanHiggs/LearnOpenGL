@@ -24,7 +24,7 @@ namespace Breakout
     SpriteRenderer::~SpriteRenderer()
     {
         if (quadVao != 0u)
-            glDeleteVertexArrays(1, &this->quadVao);
+            glDeleteVertexArrays(1, &quadVao);
     }
 
     void SpriteRenderer::DrawSprite(
@@ -71,13 +71,13 @@ namespace Breakout
             1.0f, 0.0f,     1.0f, 0.0f,
         };
 
-        glGenVertexArrays(1, &this->quadVao);
+        glGenVertexArrays(1, &quadVao);
         glGenBuffers(1, &vbo);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-        glBindVertexArray(this->quadVao);
+        glBindVertexArray(quadVao);
 
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);

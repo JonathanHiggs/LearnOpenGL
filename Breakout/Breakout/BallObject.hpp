@@ -9,7 +9,6 @@ namespace Breakout
     class BallObject : public GameObject
     {
     public:
-        glm::vec2 Velocity;
         float Radius;
         bool Stuck;
 

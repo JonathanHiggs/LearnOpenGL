@@ -6,12 +6,14 @@ namespace Breakout
 
     GameObject::GameObject(
         glm::vec2 const & position,
+        glm::vec2 const & velocity,
         glm::vec2 const & size,
         Texture2D texture,
         glm::vec3 const & color,
         bool isSolid
     )
         : Position(position)
+        , Velocity(velocity)
         , Size(size)
         , Texture(texture)
         , Color(color)

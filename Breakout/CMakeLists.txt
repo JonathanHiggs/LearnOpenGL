@@ -5,6 +5,8 @@ set(SOURCE_FILES
     Game.cpp
     GameLevel.cpp
     GameObject.cpp
+    Particle.cpp
+    ParticleGenerator.cpp
     ResourceManager.cpp
     Shader.cpp
     SpriteRenderer.cpp
@@ -17,6 +19,8 @@ set(HEADER_FILES
     Game.hpp
     GameLevel.hpp
     GameObject.hpp
+    Particle.hpp
+    ParticleGenerator.hpp
     ResourceManager.hpp
     Shader.hpp
     SpriteRenderer.hpp

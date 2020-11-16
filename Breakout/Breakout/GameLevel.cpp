@@ -114,9 +114,10 @@ namespace Breakout
                 else
                     continue;
 
-                auto pos = glm::vec2(unitWidth * x, unitHeight * y);
+                auto position = glm::vec2(unitWidth * x, unitHeight * y);
+                auto velocity = glm::vec2(0.0f);
                 auto size = glm::vec2(unitWidth, unitHeight);
-                auto object = GameObject(pos, size, texture, color, solid);
+                auto object = GameObject(position, velocity, size, texture, color, solid);
                 this->Bricks.push_back(object);
             }
         }

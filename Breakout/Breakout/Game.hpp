@@ -5,6 +5,7 @@
 #include <Breakout/BallObject.hpp>
 #include <Breakout/Collisions.hpp>
 #include <Breakout/GameLevel.hpp>
+#include <Breakout/ParticleGenerator.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
 
@@ -31,6 +32,7 @@ namespace Breakout
         std::vector<GameLevel> Levels;
         GameObject Player;
         BallObject Ball;
+        ParticleGenerator Particles;
         SpriteRenderer Renderer;
 
     protected:
@@ -40,6 +42,7 @@ namespace Breakout
             std::vector<GameLevel> levels,
             GameObject player,
             BallObject ball,
+            ParticleGenerator particles,
             SpriteRenderer renderer);
 
     public:

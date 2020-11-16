@@ -18,6 +18,7 @@ namespace Breakout
         std::vector<GameLevel> levels,
         GameObject player,
         BallObject ball,
+        ParticleGenerator particles,
         SpriteRenderer renderer
     )
         : State(GameState::Active)
@@ -28,6 +29,7 @@ namespace Breakout
         , Levels(levels)
         , Player(player)
         , Ball(ball)
+        , Particles(std::move(particles))
         , Renderer(std::move(renderer))
     { }
 
@@ -36,16 +38,22 @@ namespace Breakout
 
     Game Game::Init(unsigned int width, unsigned int height)
     {
-        auto shader = ResourceManager::LoadShader("assets/shaders/sprite.vert", "assets/shaders/sprite.frag", nullptr, "sprite");
         glm::mat4 projection = glm::ortho(0.0f, (float)width, (float)height, 0.0f, -1.0f, 1.0f);
+
+        auto shader = ResourceManager::LoadShader("assets/shaders/sprite.vert", "assets/shaders/sprite.frag", nullptr, "sprite");
         shader.Use().SetInteger("image", 0);
         shader.SetMatrix4("projection", projection);
+
+        auto particleShader = ResourceManager::LoadShader("assets/shaders/particle.vert", "assets/shaders/particle.frag", nullptr, "particle");
+        particleShader.Use().SetInteger("sprite", 0);
+        particleShader.SetMatrix4("projection", projection);
 
         ResourceManager::LoadTexture("assets/textures/background.jpg", false, "background");
         ResourceManager::LoadTexture("assets/textures/awesomeface.png", true, "face");
         ResourceManager::LoadTexture("assets/textures/block.png", false, "block");
         ResourceManager::LoadTexture("assets/textures/block_solid.png", false, "block_solid");
         ResourceManager::LoadTexture("assets/textures/paddle.png", true, "paddle");
+        ResourceManager::LoadTexture("assets/textures/particle.png", true, "particle");
 
         auto levels = std::vector<GameLevel>();
         levels.push_back(GameLevel::LoadLevel("assets/levels/one.lvl", width, height / 2));
@@ -59,6 +67,7 @@ namespace Breakout
 
         auto player = GameObject(
             playerPos,
+            glm::vec2(0.0f),
             PLAYER_SIZE,
             ResourceManager::GetTexture("paddle"));
 
@@ -70,6 +79,11 @@ namespace Breakout
             BallObject::InitialVelocity,
             ResourceManager::GetTexture("face"));
 
+        auto particles = ParticleGenerator(
+            particleShader,
+            ResourceManager::GetTexture("particle"),
+            500u);
+
         auto renderer = SpriteRenderer(shader);
 
         return Game(
@@ -77,6 +91,7 @@ namespace Breakout
             levels,
             player,
             ball,
+            std::move(particles),
             std::move(renderer));
     }
 
@@ -113,18 +128,15 @@ namespace Breakout
         {
             Ball.Move(dt, Width);
             CheckCollisions();
-
             if (Ball.Position.y >= Height)
             {
                 ResetLevel();
                 ResetPlayer();
             }
-        }
-        else if (State == GameState::Pause)
-        {
-            dt = 1.0f / 60.0f;
-            Ball.Move(dt, Width);
-            CheckCollisions();
+
+            auto newParticles = Ball.Stuck ? 0 : 2;
+
+            Particles.Update(dt, Ball, newParticles, glm::vec2(Ball.Radius / 2.0f));
         }
     }
 
@@ -194,6 +206,7 @@ namespace Breakout
 
             Levels[Level].Draw(Renderer);
             Player.Draw(Renderer);
+            Particles.Draw();
             Ball.Draw(Renderer);
         }
     }
