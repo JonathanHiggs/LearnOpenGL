@@ -1,5 +1,6 @@
 #include <Breakout/Game.hpp>
 
+#include <algorithm>
 #include <iostream>
 
 #include <GLFW/glfw3.h>
@@ -33,7 +34,9 @@ namespace Breakout
         , Particles(std::move(particles))
         , Effects(std::move(effects))
         , Renderer(std::move(renderer))
-    { }
+    {
+        PowerUps.reserve(20u);
+    }
 
     Game::~Game()
     { }
@@ -61,6 +64,13 @@ namespace Breakout
         ResourceManager::LoadTexture("assets/textures/block_solid.png", false, "block_solid");
         ResourceManager::LoadTexture("assets/textures/paddle.png", true, "paddle");
         ResourceManager::LoadTexture("assets/textures/particle.png", true, "particle");
+
+        ResourceManager::LoadTexture("assets/textures/powerup_chaos.png", true, "chaos");
+        ResourceManager::LoadTexture("assets/textures/powerup_confuse.png", true, "confuse");
+        ResourceManager::LoadTexture("assets/textures/powerup_increase.png", true, "increase");
+        ResourceManager::LoadTexture("assets/textures/powerup_passthrough.png", true, "passthrough");
+        ResourceManager::LoadTexture("assets/textures/powerup_speed.png", true, "speed");
+        ResourceManager::LoadTexture("assets/textures/powerup_sticky.png", true, "sticky");
 
         auto levels = std::vector<GameLevel>();
         levels.push_back(GameLevel::LoadLevel("assets/levels/one.lvl", width, height / 2));
@@ -140,6 +150,7 @@ namespace Breakout
         {
             Ball.Move(dt, Width);
             CheckCollisions();
+
             if (Ball.Position.y >= Height)
             {
                 ResetLevel();
@@ -149,6 +160,8 @@ namespace Breakout
             auto newParticles = Ball.Stuck ? 0 : 2;
 
             Particles.Update(dt, Ball, newParticles, glm::vec2(Ball.Radius / 2.0f));
+
+            UpdatePowerUps(dt);
 
             if (ShakeTime > 0.0f)
             {
@@ -162,6 +175,67 @@ namespace Breakout
         }
     }
 
+    void Game::UpdatePowerUps(float dt)
+    {
+        for (auto& powerUp : PowerUps)
+        {
+            powerUp.Position += powerUp.Velocity * dt;
+
+            if (powerUp.Activated)
+            {
+                powerUp.Duration -= dt;
+
+                if (powerUp.Duration <= 0.0f)
+                {
+                    powerUp.Activated = false;
+
+                    switch (powerUp.Type)
+                    {
+                    case PowerUpType::Chaos:
+                    {
+                        if (!IsOtherPowerUpActive(PowerUpType::Chaos))
+                            Effects.Chaos = false;
+                    } break;
+
+                    case PowerUpType::Confuse:
+                    {
+                        if (!IsOtherPowerUpActive(PowerUpType::Confuse))
+                            Effects.Confuse = false;
+                    } break;
+
+                    case PowerUpType::PassThrough:
+                    {
+                        if (!IsOtherPowerUpActive(PowerUpType::PassThrough))
+                        {
+                            Ball.PassThrough = false;
+                            Ball.Color = glm::vec3(1.0f);
+                        }
+                    } break;
+
+                    case PowerUpType::Sticky:
+                    {
+                        if (!IsOtherPowerUpActive(PowerUpType::Sticky))
+                        {
+                            Ball.Sticky = false;
+                            Player.Color = glm::vec3(1.0f);
+                        }
+                    } break;
+
+                    default:
+                        break;
+                    }
+                }
+            }
+        }
+
+        PowerUps.erase(
+            std::remove_if(
+                PowerUps.begin(),
+                PowerUps.end(),
+                [](PowerUp const& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }),
+            PowerUps.end());
+    }
+
     void Game::CheckCollisions()
     {
         for (auto& brick : Levels[Level].Bricks)
@@ -172,29 +246,36 @@ namespace Breakout
                 if (result.Collision)
                 {
                     if (!brick.IsSolid)
+                    {
                         brick.Destroyed = true;
+                        SpawnPowerUp(brick);
+                    }
+                    else
                     {
                         ShakeTime += 0.2f;
                         Effects.Shake = true;
                     }
 
-                    if (result.Direction == Direction::Left || result.Direction == Direction::Right)
+                    if (!(Ball.PassThrough && !Ball.IsSolid))
                     {
-                        Ball.Velocity.x = -Ball.Velocity.x;
-                        auto penitration = Ball.Radius - std::abs(result.Difference.x);
-                        if (result.Direction == Direction::Left)
-                            Ball.Position.x += penitration;
+                        if (result.Direction == Direction::Left || result.Direction == Direction::Right)
+                        {
+                            Ball.Velocity.x = -Ball.Velocity.x;
+                            auto penitration = Ball.Radius - std::abs(result.Difference.x);
+                            if (result.Direction == Direction::Left)
+                                Ball.Position.x += penitration;
+                            else
+                                Ball.Position.x -= penitration;
+                        }
                         else
-                            Ball.Position.x -= penitration;
-                    }
-                    else
-                    {
-                        Ball.Velocity.y = -Ball.Velocity.y;
-                        auto penitration = Ball.Radius - std::abs(result.Difference.y);
-                        if (result.Direction == Direction::Up)
-                            Ball.Position.y -= penitration;
-                        else
-                            Ball.Position.y += penitration;
+                        {
+                            Ball.Velocity.y = -Ball.Velocity.y;
+                            auto penitration = Ball.Radius - std::abs(result.Difference.y);
+                            if (result.Direction == Direction::Up)
+                                Ball.Position.y -= penitration;
+                            else
+                                Ball.Position.y += penitration;
+                        }
                     }
                 }
             }
@@ -211,12 +292,136 @@ namespace Breakout
 
             auto speed = glm::length(Ball.Velocity);
 
+            Ball.Stuck = Ball.Sticky;
             Ball.Velocity =
                 glm::normalize(
                     glm::vec2(
                         BallObject::InitialVelocity.x * proportion * strength,
                         -1.0f * abs(Ball.Velocity.y)))
                 * speed;
+        }
+
+        for (auto& powerUp : PowerUps)
+        {
+            if (!powerUp.Destroyed)
+            {
+                if (powerUp.Position.y >= Height)
+                    powerUp.Destroyed = true;
+
+                auto powerUpCollision = CheckCollision(Player, powerUp);
+                if (powerUpCollision)
+                {
+                    ActivatePowerUp(powerUp);
+                    powerUp.Destroyed = true;
+                    powerUp.Activated = true;
+                }
+            }
+        }
+    }
+
+    bool ShouldSpawn(unsigned int chance)
+    {
+        return rand() % chance == 0;
+    }
+
+    void Game::SpawnPowerUp(GameObject& block)
+    {
+        if (ShouldSpawn(75))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::Speed,
+                    glm::vec3(0.5f, 0.5f, 1.0f),
+                    0.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("speed")));
+
+        if (ShouldSpawn(75))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::Sticky,
+                    glm::vec3(1.5f, 0.5f, 1.0f),
+                    20.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("sticky")));
+
+        if (ShouldSpawn(75))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::PassThrough,
+                    glm::vec3(0.5f, 1.0f, 0.5f),
+                    10.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("passthrough")));
+
+        if (ShouldSpawn(75))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::PadSizeIncrease,
+                    glm::vec3(1.0f, 0.5f, 0.4f),
+                    0.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("increase")));
+
+        if (ShouldSpawn(15))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::Confuse,
+                    glm::vec3(1.0f, 0.3f, 0.3f),
+                    15.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("confuse")));
+
+        if (ShouldSpawn(15))
+            PowerUps.push_back(
+                PowerUp(
+                    PowerUpType::Chaos,
+                    glm::vec3(0.9f, 0.3f, 0.3f),
+                    15.0f,
+                    block.Position,
+                    ResourceManager::GetTexture("chaos")));
+    }
+
+    bool Game::IsOtherPowerUpActive(PowerUpType type)
+    {
+        for (auto const& powerUp : PowerUps)
+            if (powerUp.Activated && powerUp.Type == type)
+                return true;
+
+        return false;
+    }
+
+    void Game::ActivatePowerUp(PowerUp& powerUp)
+    {
+        switch (powerUp.Type)
+        {
+        case PowerUpType::Chaos:
+        {
+            if (!Effects.Confuse)
+                Effects.Chaos = true;
+        } break;
+        case PowerUpType::Confuse:
+        {
+            if (!Effects.Chaos)
+                Effects.Confuse = true;
+        } break;
+        case PowerUpType::PadSizeIncrease:
+        {
+            Player.Size.x += 50;
+        } break;
+        case PowerUpType::PassThrough:
+        {
+            Ball.PassThrough = true;
+            Ball.Color = glm::vec3(1.0f, 0.5f, 0.5f);
+        } break;
+        case PowerUpType::Speed:
+        {
+            Ball.Velocity *= 1.2f;
+        } break;
+        case PowerUpType::Sticky:
+        {
+            Ball.Sticky = true;
+            Player.Color = glm::vec3(1.0f, 0.5f, 1.0f);
+        } break;
         }
     }
 
@@ -226,6 +431,8 @@ namespace Breakout
         {
             Effects.BeginRender();
 
+            Renderer.shader.Use();
+
             auto background = ResourceManager::GetTexture("background");
             Renderer.DrawSprite(
                 background,
@@ -234,8 +441,12 @@ namespace Breakout
 
             Levels[Level].Draw(Renderer);
             Player.Draw(Renderer);
-            Particles.Draw();
             Ball.Draw(Renderer);
+            for (auto& powerUp : PowerUps)
+                if (!powerUp.Destroyed)
+                    powerUp.Draw(Renderer);
+
+            Particles.Draw();
 
             Effects.EndRender();
             Effects.Render((float)glfwGetTime());
@@ -245,17 +456,24 @@ namespace Breakout
     void Game::ResetLevel()
     {
         Levels[0].Load("assets/levels/one.lvl", Width, Height / 2);
+
+        PowerUps.clear();
     }
 
     void Game::ResetPlayer()
     {
         Player.Size = PLAYER_SIZE;
         Player.Position = glm::vec2(Width / 2.0f - PLAYER_SIZE.x / 2.0f, Height - PLAYER_SIZE.y);
+        Player.Color = glm::vec3(1.0f);
+
         Ball.Reset(
             Player.Position + glm::vec2(
                 PLAYER_SIZE.x / 2.0f - BallObject::InitialRadius,
                 -(BallObject::InitialRadius * 2.0f)),
             BallObject::InitialVelocity);
+
+        Effects.Chaos = false;
+        Effects.Confuse = false;
     }
 
 }

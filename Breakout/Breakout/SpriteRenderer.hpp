@@ -12,6 +12,8 @@ namespace Breakout
     class SpriteRenderer
     {
     public:
+        Shader shader;
+
         SpriteRenderer(Shader& shader);
         SpriteRenderer(SpriteRenderer&& other) noexcept;
 
@@ -28,7 +30,6 @@ namespace Breakout
         void InitRenderData();
 
     private:
-        Shader shader;
         unsigned int quadVao;
     };
 

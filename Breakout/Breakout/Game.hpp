@@ -7,6 +7,7 @@
 #include <Breakout/GameLevel.hpp>
 #include <Breakout/ParticleGenerator.hpp>
 #include <Breakout/PostProcessor.hpp>
+#include <Breakout/PowerUp.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
 
@@ -29,11 +30,13 @@ namespace Breakout
     public:
         GameState State;
         bool Keys[2014];
-        unsigned int Width, Height, Level;
+        unsigned int Width, Height;
+        unsigned int Level;
         std::vector<GameLevel> Levels;
         GameObject Player;
         BallObject Ball;
         ParticleGenerator Particles;
+        std::vector<PowerUp> PowerUps;
         PostProcessor Effects;
         SpriteRenderer Renderer;
         float ShakeTime = 0.0f;
@@ -54,8 +57,15 @@ namespace Breakout
         ~Game();
 
         void ProcessInput(float deltaTime);
+
         void Update(float deltaTime);
         void CheckCollisions();
+
+        void SpawnPowerUp(GameObject& block);
+        bool IsOtherPowerUpActive(PowerUpType type);
+        void ActivatePowerUp(PowerUp& powerUp);
+        void UpdatePowerUps(float deltaTime);
+
         void Render();
 
         void ResetLevel();

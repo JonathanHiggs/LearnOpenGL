@@ -16,6 +16,8 @@ namespace Breakout
             glm::vec3(1.0f))
         , Radius(radius)
         , Stuck(true)
+        , Sticky(false)
+        , PassThrough(false)
     { }
 
 
@@ -30,18 +32,21 @@ namespace Breakout
             if (Position.x <= 0.0f)
             {
                 Velocity.x = -Velocity.x;
-                Position.x = -Position.x;
+                //Position.x = -Position.x;
+                Position.x = 0.0f;
             }
             else if (Position.x >= width)
             {
                 Velocity.x = -Velocity.x;
-                Position.x = 2.0f * width - Position.x;
+                //Position.x = 2.0f * width - Position.x;
+                Position.x = width - Size.x;
             }
 
             if (Position.y <= 0.0f)
             {
                 Velocity.y = -Velocity.y;
-                Position.y = -Position.y;
+                //Position.y = -Position.y;
+                Position.y = 0.0f;
             }
         }
 
@@ -53,6 +58,8 @@ namespace Breakout
         Position = position;
         Velocity = velocity;
         Stuck = true;
+        Sticky = false;
+        PassThrough = false;
     }
 
 }

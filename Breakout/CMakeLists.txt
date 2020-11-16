@@ -11,6 +11,7 @@ set(CLASSES
     Particle
     ParticleGenerator
     PostProcessor
+    PowerUp
     ResourceManager
     Shader
     SpriteRenderer
