@@ -19,6 +19,7 @@ namespace Breakout
         GameObject player,
         BallObject ball,
         ParticleGenerator particles,
+        PostProcessor effects,
         SpriteRenderer renderer
     )
         : State(GameState::Active)
@@ -30,6 +31,7 @@ namespace Breakout
         , Player(player)
         , Ball(ball)
         , Particles(std::move(particles))
+        , Effects(std::move(effects))
         , Renderer(std::move(renderer))
     { }
 
@@ -40,13 +42,18 @@ namespace Breakout
     {
         glm::mat4 projection = glm::ortho(0.0f, (float)width, (float)height, 0.0f, -1.0f, 1.0f);
 
-        auto shader = ResourceManager::LoadShader("assets/shaders/sprite.vert", "assets/shaders/sprite.frag", nullptr, "sprite");
+        auto shader = ResourceManager::LoadShader(
+            "assets/shaders/sprite.vert", "assets/shaders/sprite.frag", nullptr, "sprite");
         shader.Use().SetInteger("image", 0);
         shader.SetMatrix4("projection", projection);
 
-        auto particleShader = ResourceManager::LoadShader("assets/shaders/particle.vert", "assets/shaders/particle.frag", nullptr, "particle");
+        auto particleShader = ResourceManager::LoadShader(
+            "assets/shaders/particle.vert", "assets/shaders/particle.frag", nullptr, "particle");
         particleShader.Use().SetInteger("sprite", 0);
         particleShader.SetMatrix4("projection", projection);
+
+        auto postProcessorShader = ResourceManager::LoadShader(
+            "assets/shaders/post-processing.vert", "assets/shaders/post-processing.frag", nullptr, "post-processor");
 
         ResourceManager::LoadTexture("assets/textures/background.jpg", false, "background");
         ResourceManager::LoadTexture("assets/textures/awesomeface.png", true, "face");
@@ -84,6 +91,10 @@ namespace Breakout
             ResourceManager::GetTexture("particle"),
             500u);
 
+        auto effects = PostProcessor(
+            postProcessorShader,
+            width, height);
+
         auto renderer = SpriteRenderer(shader);
 
         return Game(
@@ -92,6 +103,7 @@ namespace Breakout
             player,
             ball,
             std::move(particles),
+            std::move(effects),
             std::move(renderer));
     }
 
@@ -137,6 +149,16 @@ namespace Breakout
             auto newParticles = Ball.Stuck ? 0 : 2;
 
             Particles.Update(dt, Ball, newParticles, glm::vec2(Ball.Radius / 2.0f));
+
+            if (ShakeTime > 0.0f)
+            {
+                ShakeTime -= dt;
+                if (ShakeTime <= 0.0f)
+                {
+                    ShakeTime = 0.0f;
+                    Effects.Shake = false;
+                }
+            }
         }
     }
 
@@ -151,6 +173,10 @@ namespace Breakout
                 {
                     if (!brick.IsSolid)
                         brick.Destroyed = true;
+                    {
+                        ShakeTime += 0.2f;
+                        Effects.Shake = true;
+                    }
 
                     if (result.Direction == Direction::Left || result.Direction == Direction::Right)
                     {
@@ -198,6 +224,8 @@ namespace Breakout
     {
         if (State == GameState::Active || State == GameState::Pause)
         {
+            Effects.BeginRender();
+
             auto background = ResourceManager::GetTexture("background");
             Renderer.DrawSprite(
                 background,
@@ -208,6 +236,9 @@ namespace Breakout
             Player.Draw(Renderer);
             Particles.Draw();
             Ball.Draw(Renderer);
+
+            Effects.EndRender();
+            Effects.Render((float)glfwGetTime());
         }
     }
 

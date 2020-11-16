@@ -6,6 +6,7 @@
 #include <Breakout/Collisions.hpp>
 #include <Breakout/GameLevel.hpp>
 #include <Breakout/ParticleGenerator.hpp>
+#include <Breakout/PostProcessor.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
 
@@ -33,7 +34,9 @@ namespace Breakout
         GameObject Player;
         BallObject Ball;
         ParticleGenerator Particles;
+        PostProcessor Effects;
         SpriteRenderer Renderer;
+        float ShakeTime = 0.0f;
 
     protected:
         Game(
@@ -43,6 +46,7 @@ namespace Breakout
             GameObject player,
             BallObject ball,
             ParticleGenerator particles,
+            PostProcessor effects,
             SpriteRenderer renderer);
 
     public:
