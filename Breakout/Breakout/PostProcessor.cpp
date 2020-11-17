@@ -89,19 +89,23 @@ namespace Breakout
     void PostProcessor::InitFramebuffers()
     {
         glGenFramebuffers(1, &msfbo);
-        glGenFramebuffers(1, &fbo);
-        glGenRenderbuffers(1, &rbo);
-
         glBindFramebuffer(GL_FRAMEBUFFER, msfbo);
+
+        glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGB, width, height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "ERROR::POSTPROCESSOR: Failed to initialize MSFBO\n";
 
+        glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
         texture.Generate(width, height, NULL);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.ID, 0);
+
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "ERROR::POSTPROCESSOR: Failed to initialize FBO\n";
 

@@ -42,7 +42,9 @@ namespace Breakout
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        auto breakout = Game::Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+        auto breakout = Game::Create(SCREEN_WIDTH, SCREEN_HEIGHT);
+        breakout.Init();
+
         glfwSetWindowUserPointer(window, &breakout);
 
         float deltaTime = 0.0f;

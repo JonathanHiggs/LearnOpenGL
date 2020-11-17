@@ -36,12 +36,15 @@ namespace Breakout
         , Renderer(std::move(renderer))
     {
         PowerUps.reserve(20u);
+        SoundEngine = irrklang::createIrrKlangDevice();
     }
 
     Game::~Game()
-    { }
+    {
+        SoundEngine->drop();
+    }
 
-    Game Game::Init(unsigned int width, unsigned int height)
+    Game Game::Create(unsigned int width, unsigned int height)
     {
         glm::mat4 projection = glm::ortho(0.0f, (float)width, (float)height, 0.0f, -1.0f, 1.0f);
 
@@ -115,6 +118,11 @@ namespace Breakout
             std::move(particles),
             std::move(effects),
             std::move(renderer));
+    }
+
+    void Game::Init()
+    {
+        SoundEngine->play2D("assets/audio/breakout.mp3", true);
     }
 
     void Game::ProcessInput(float dt)
@@ -249,11 +257,13 @@ namespace Breakout
                     {
                         brick.Destroyed = true;
                         SpawnPowerUp(brick);
+                        SoundEngine->play2D("assets/audio/bleep.mp3", false);
                     }
                     else
                     {
                         ShakeTime += 0.2f;
                         Effects.Shake = true;
+                        SoundEngine->play2D("assets/audio/solid.wav", false);
                     }
 
                     if (!(Ball.PassThrough && !Ball.IsSolid))
@@ -299,6 +309,8 @@ namespace Breakout
                         BallObject::InitialVelocity.x * proportion * strength,
                         -1.0f * abs(Ball.Velocity.y)))
                 * speed;
+
+            SoundEngine->play2D("assets/audio/bleep.wav", false);
         }
 
         for (auto& powerUp : PowerUps)
@@ -314,6 +326,7 @@ namespace Breakout
                     ActivatePowerUp(powerUp);
                     powerUp.Destroyed = true;
                     powerUp.Activated = true;
+                    SoundEngine->play2D("assets/audio/powerup.wav", false);
                 }
             }
         }

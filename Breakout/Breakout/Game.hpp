@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <irrKlang.h>
+
 #include <Breakout/BallObject.hpp>
 #include <Breakout/Collisions.hpp>
 #include <Breakout/GameLevel.hpp>
@@ -39,6 +41,7 @@ namespace Breakout
         std::vector<PowerUp> PowerUps;
         PostProcessor Effects;
         SpriteRenderer Renderer;
+        irrklang::ISoundEngine* SoundEngine;
         float ShakeTime = 0.0f;
 
     protected:
@@ -53,8 +56,10 @@ namespace Breakout
             SpriteRenderer renderer);
 
     public:
-        static Game Init(unsigned int width, unsigned int height);
+        static Game Create(unsigned int width, unsigned int height);
         ~Game();
+
+        void Init();
 
         void ProcessInput(float deltaTime);
 
