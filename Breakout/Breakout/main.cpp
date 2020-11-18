@@ -86,7 +86,10 @@ namespace Breakout
             if (action == GLFW_PRESS)
                 breakout->Keys[key] = true;
             else if (action == GLFW_RELEASE)
+            {
                 breakout->Keys[key] = false;
+                breakout->KeysProcessed[key] = false;
+            }
         }
     }
 

@@ -32,21 +32,18 @@ namespace Breakout
             if (Position.x <= 0.0f)
             {
                 Velocity.x = -Velocity.x;
-                //Position.x = -Position.x;
-                Position.x = 0.0f;
+                Position.x = -Position.x;
             }
             else if (Position.x >= width)
             {
                 Velocity.x = -Velocity.x;
-                //Position.x = 2.0f * width - Position.x;
-                Position.x = width - Size.x;
+                Position.x = 2.0f * width - Position.x;
             }
 
             if (Position.y <= 0.0f)
             {
                 Velocity.y = -Velocity.y;
-                //Position.y = -Position.y;
-                Position.y = 0.0f;
+                Position.y = -Position.y;
             }
         }
 

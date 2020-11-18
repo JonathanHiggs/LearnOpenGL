@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 #include <GLFW/glfw3.h>
 
@@ -23,17 +24,19 @@ namespace Breakout
         PostProcessor effects,
         SpriteRenderer renderer
     )
-        : State(GameState::Active)
+        : State(GameState::Menu)
         , Keys()
         , Width(width)
         , Height(height)
         , Level(0u)
+        , Lives(3u)
         , Levels(levels)
         , Player(player)
         , Ball(ball)
         , Particles(std::move(particles))
         , Effects(std::move(effects))
         , Renderer(std::move(renderer))
+        , Text(width, height)
     {
         PowerUps.reserve(20u);
         SoundEngine = irrklang::createIrrKlangDevice();
@@ -77,9 +80,9 @@ namespace Breakout
 
         auto levels = std::vector<GameLevel>();
         levels.push_back(GameLevel::LoadLevel("assets/levels/one.lvl", width, height / 2));
-        //levels.push_back(GameLevel::LoadLevel("assets/levels/two.lvl", width, height / 2));
-        //levels.push_back(GameLevel::LoadLevel("assets/levels/three.lvl", width, height / 2));
-        //levels.push_back(GameLevel::LoadLevel("assets/levels/four.lvl", width, height / 2));
+        levels.push_back(GameLevel::LoadLevel("assets/levels/two.lvl", width, height / 2));
+        levels.push_back(GameLevel::LoadLevel("assets/levels/three.lvl", width, height / 2));
+        levels.push_back(GameLevel::LoadLevel("assets/levels/four.lvl", width, height / 2));
 
         auto playerPos = glm::vec2(
             width / 2.0f - PLAYER_SIZE.x / 2.0f,
@@ -123,6 +126,7 @@ namespace Breakout
     void Game::Init()
     {
         SoundEngine->play2D("assets/audio/breakout.mp3", true);
+        Text.Load("assets/fonts/ocraext.TTF", 24);
     }
 
     void Game::ProcessInput(float dt)
@@ -150,6 +154,65 @@ namespace Breakout
             if (Keys[GLFW_KEY_SPACE])
                 Ball.Stuck = false;
         }
+        else if (State == GameState::Menu)
+        {
+            if (Keys[GLFW_KEY_ENTER] && !KeysProcessed[GLFW_KEY_ENTER])
+            {
+                State = GameState::Active;
+                KeysProcessed[GLFW_KEY_ENTER] = true;
+            }
+
+            if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
+            {
+                Level = (Level + 1) % 4;
+                KeysProcessed[GLFW_KEY_W] = true;
+            }
+
+            if (Keys[GLFW_KEY_UP] && !KeysProcessed[GLFW_KEY_UP])
+            {
+                Level = (Level + 1) % 4;
+                KeysProcessed[GLFW_KEY_UP] = true;
+            }
+
+            if (Keys[GLFW_KEY_S] && !KeysProcessed[GLFW_KEY_S])
+            {
+                if (Level > 0u)
+                    --Level;
+                else
+                    Level = 3u;
+
+                KeysProcessed[GLFW_KEY_S] = true;
+            }
+
+            if (Keys[GLFW_KEY_DOWN] && !KeysProcessed[GLFW_KEY_DOWN])
+            {
+                if (Level > 0u)
+                    --Level;
+                else
+                    Level = 3u;
+
+                KeysProcessed[GLFW_KEY_DOWN] = true;
+            }
+        }
+        else if (State == GameState::LevelWin)
+        {
+            if (Keys[GLFW_KEY_ENTER])
+            {
+                Effects.Chaos = false;
+                Level = (Level + 1) % 4;
+                State = GameState::Active;
+                KeysProcessed[GLFW_KEY_ENTER] = true;
+            }
+        }
+        else if (State == GameState::Win)
+        {
+            if (Keys[GLFW_KEY_ENTER])
+            {
+                Effects.Chaos = false;
+                State = GameState::Menu;
+                KeysProcessed[GLFW_KEY_ENTER] = true;
+            }
+        }
     }
 
     void Game::Update(float dt)
@@ -161,7 +224,12 @@ namespace Breakout
 
             if (Ball.Position.y >= Height)
             {
-                ResetLevel();
+                --Lives;
+                if (Lives == 0u)
+                {
+                    ResetLevel();
+                    //State = GameState::Menu;
+                }
                 ResetPlayer();
             }
 
@@ -180,6 +248,14 @@ namespace Breakout
                     Effects.Shake = false;
                 }
             }
+        }
+
+        if (State == GameState::Active && Levels[Level].IsComplete())
+        {
+            ResetLevel();
+            ResetPlayer();
+            Effects.Chaos = true;
+            State = Level < 3 ? GameState::LevelWin : GameState::Win;
         }
     }
 
@@ -259,7 +335,7 @@ namespace Breakout
                         SpawnPowerUp(brick);
                         SoundEngine->play2D("assets/audio/bleep.mp3", false);
                     }
-                    else
+                    else if (!Ball.PassThrough)
                     {
                         ShakeTime += 0.2f;
                         Effects.Shake = true;
@@ -463,12 +539,121 @@ namespace Breakout
 
             Effects.EndRender();
             Effects.Render((float)glfwGetTime());
+
+            std::stringstream ss; ss << Lives;
+            Text.RenderText("Lives: " + ss.str(), 5.0f, 5.0f, 1.0f);
         }
+        else if (State == GameState::Menu)
+        {
+            Renderer.shader.Use();
+
+            auto background = ResourceManager::GetTexture("background");
+            Renderer.DrawSprite(
+                background,
+                glm::vec2(0.0f, 0.0f),
+                glm::vec2((float)Width, (float)Height));
+
+            auto line1 = "Press ENTER to start";
+            auto line2 = "Press W or S to select the level";
+            std::stringstream ss; ss << "Level: " << Level + 1;
+            auto line3 = ss.str();
+
+            auto line1Measure = Text.Measure(line1);
+            auto line2Measure = Text.Measure(line2, 0.75f);
+            auto line3Measure = Text.Measure(line3, 0.75f);
+            auto spacing = 20.0f;
+
+            auto totalHeight = line1Measure.y + spacing + line2Measure.y + spacing + line3Measure.y;
+            auto line1Top = (Height - totalHeight) / 2.0f;
+            auto line2Top = line1Top + line1Measure.y + spacing;
+            auto line3Top = line2Top + line2Measure.y + spacing;
+
+
+            Text.RenderText(line1, (Width - line1Measure.x) / 2.0f, line1Top);
+            Text.RenderText(line2, (Width - line2Measure.x) / 2.0f, line2Top, 0.75f);
+            Text.RenderText(line3, (Width - line3Measure.x) / 2.0f, line3Top, 0.75f);
+        }
+        else if (State == GameState::LevelWin)
+        {
+            Effects.BeginRender();
+
+            Renderer.shader.Use();
+
+            auto background = ResourceManager::GetTexture("background");
+            Renderer.DrawSprite(
+                background,
+                glm::vec2(0.0f, 0.0f),
+                glm::vec2((float)Width, (float)Height));
+
+            Levels[Level].Draw(Renderer);
+            Effects.EndRender();
+            Effects.Render((float)glfwGetTime());
+
+            std::stringstream ss; ss << "You beat level " << Level + 1;
+            auto line1 = ss.str();
+            auto line2 = "Press ENTER to continue";
+
+            auto line1Measure = Text.Measure(line1);
+            auto line2Measure = Text.Measure(line2, 0.75f);
+            auto spacing = 20.0f;
+
+            auto totalHeight = line1Measure.y + spacing + line2Measure.y;
+            auto line1Top = (Height - totalHeight) / 2.0f;
+            auto line2Top = line1Top + line1Measure.y + spacing;
+
+            Text.RenderText(line1, (Width - line1Measure.x) / 2.0f, line1Top);
+            Text.RenderText(line2, (Width - line2Measure.x) / 2.0f, line2Top, 0.75f);
+        }
+        else if (State == GameState::Win)
+        {
+            Effects.BeginRender();
+
+            Renderer.shader.Use();
+
+            auto background = ResourceManager::GetTexture("background");
+            Renderer.DrawSprite(
+                background,
+                glm::vec2(0.0f, 0.0f),
+                glm::vec2((float)Width, (float)Height));
+
+            Levels[Level].Draw(Renderer);
+            Effects.EndRender();
+            Effects.Render((float)glfwGetTime());
+
+            auto line1 = "You WON!";
+            auto line2 = "Press ENTER to retry or ESC to quit";
+
+            auto line1Measure = Text.Measure(line1);
+            auto line2Measure = Text.Measure(line2, 0.75f);
+            auto spacing = 20.0f;
+
+            auto totalHeight = line1Measure.y + spacing + line2Measure.y;
+            auto line1Top = (Height - totalHeight) / 2.0f;
+            auto line2Top = line1Top + line1Measure.y + spacing;
+
+            Text.RenderText(line1, (Width - line1Measure.x) / 2.0f, line1Top);
+            Text.RenderText(line2, (Width - line2Measure.x) / 2.0f, line2Top, 0.75f);
+        }
+
     }
 
     void Game::ResetLevel()
     {
-        Levels[0].Load("assets/levels/one.lvl", Width, Height / 2);
+        switch (Level)
+        {
+        case 0:
+            Levels[0].Load("assets/levels/one.lvl", Width, Height / 2);
+            break;
+        case 1:
+            Levels[1].Load("assets/levels/two.lvl", Width, Height / 2);
+            break;
+        case 2:
+            Levels[2].Load("assets/levels/three.lvl", Width, Height / 2);
+            break;
+        case 3:
+            Levels[3].Load("assets/levels/four.lvl", Width, Height / 2);
+            break;
+        }
 
         PowerUps.clear();
     }

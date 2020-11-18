@@ -15,6 +15,7 @@ set(CLASSES
     ResourceManager
     Shader
     SpriteRenderer
+    TextRenderer
     Texture
 )
 
@@ -44,6 +45,7 @@ target_link_libraries(Breakout PRIVATE
     Glad
     glm
     stb
+    freetype
     ${IRRKLANG_LIB}
 )
 

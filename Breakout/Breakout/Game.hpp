@@ -10,6 +10,7 @@
 #include <Breakout/ParticleGenerator.hpp>
 #include <Breakout/PostProcessor.hpp>
 #include <Breakout/PowerUp.hpp>
+#include <Breakout/TextRenderer.hpp>
 #include <Breakout/SpriteRenderer.hpp>
 
 
@@ -21,6 +22,7 @@ namespace Breakout
         Active,
         Pause,
         Menu,
+        LevelWin,
         Win
     };
 
@@ -31,9 +33,11 @@ namespace Breakout
     {
     public:
         GameState State;
-        bool Keys[2014];
+        bool Keys[1024];
+        bool KeysProcessed[1024];
         unsigned int Width, Height;
         unsigned int Level;
+        unsigned int Lives;
         std::vector<GameLevel> Levels;
         GameObject Player;
         BallObject Ball;
@@ -41,6 +45,7 @@ namespace Breakout
         std::vector<PowerUp> PowerUps;
         PostProcessor Effects;
         SpriteRenderer Renderer;
+        TextRenderer Text;
         irrklang::ISoundEngine* SoundEngine;
         float ShakeTime = 0.0f;
 
